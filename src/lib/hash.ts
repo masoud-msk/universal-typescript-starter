@@ -1,6 +1,6 @@
-import { createHash } from 'crypto';
+import { createHash } from 'crypto'
 
-import { binToHex, instantiateSha256, utf8ToBin } from '@bitauth/libauth';
+import { binToHex, instantiateSha256, utf8ToBin } from '@bitauth/libauth'
 
 /**
  * Calculate the sha256 digest of a string.
@@ -19,9 +19,9 @@ import { binToHex, instantiateSha256, utf8ToBin } from '@bitauth/libauth';
  * @returns sha256 message digest
  */
 export const sha256 = async (message: string) => {
-  const sha256 = await instantiateSha256();
-  return binToHex(sha256.hash(utf8ToBin(message)));
-};
+  const sha256 = await instantiateSha256()
+  return binToHex(sha256.hash(utf8ToBin(message)))
+}
 
 /**
  * A synchronous implementation of `sha256` which uses the native Node.js
@@ -37,5 +37,5 @@ export const sha256 = async (message: string) => {
  * @returns sha256 message digest
  */
 export const sha256Native = (message: string) => {
-  return createHash('sha256').update(message).digest('hex');
-};
+  return createHash('sha256').update(message).digest('hex')
+}

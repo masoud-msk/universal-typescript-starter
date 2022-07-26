@@ -1,6 +1,6 @@
-import { DistinctQuestion, prompt } from 'inquirer';
+import { DistinctQuestion, prompt } from 'inquirer'
 
-import { Runner, TypescriptStarterCLIOptions, validateName } from './utils';
+import { Runner, TypescriptStarterCLIOptions, validateName } from './utils'
 
 export async function inquire(): Promise<TypescriptStarterCLIOptions> {
   const packageNameQuestion: DistinctQuestion = {
@@ -9,7 +9,7 @@ export async function inquire(): Promise<TypescriptStarterCLIOptions> {
     name: 'projectName',
     type: 'input',
     validate: validateName,
-  };
+  }
 
   enum ProjectType {
     Node = 'node',
@@ -23,7 +23,7 @@ export async function inquire(): Promise<TypescriptStarterCLIOptions> {
     message: '🔨 What are you making?',
     name: 'type',
     type: 'list',
-  };
+  }
 
   const packageDescriptionQuestion: DistinctQuestion = {
     filter: (answer: string) => answer.trim(),
@@ -31,7 +31,7 @@ export async function inquire(): Promise<TypescriptStarterCLIOptions> {
     name: 'description',
     type: 'input',
     validate: (answer: string) => answer.length > 0,
-  };
+  }
 
   const runnerQuestion: DistinctQuestion = {
     choices: [
@@ -41,7 +41,7 @@ export async function inquire(): Promise<TypescriptStarterCLIOptions> {
     message: '🚄 Will this project use npm or yarn?',
     name: 'runner',
     type: 'list',
-  };
+  }
 
   enum TypeDefinitions {
     none = 'none',
@@ -73,7 +73,7 @@ export async function inquire(): Promise<TypescriptStarterCLIOptions> {
     name: 'definitions',
     type: 'list',
     when: (answers) => answers.type === ProjectType.Library,
-  };
+  }
 
   enum Extras {
     appveyor = 'appveyor',
@@ -130,7 +130,7 @@ export async function inquire(): Promise<TypescriptStarterCLIOptions> {
     message: '🚀 More fun stuff:',
     name: 'extras',
     type: 'checkbox',
-  };
+  }
 
   return prompt([
     packageNameQuestion,
@@ -140,21 +140,15 @@ export async function inquire(): Promise<TypescriptStarterCLIOptions> {
     typeDefsQuestion,
     extrasQuestion,
   ]).then((answers) => {
-    const {
-      definitions,
-      description,
-      extras,
-      projectName,
-      runner,
-      type,
-    } = answers as {
-      readonly definitions?: TypeDefinitions;
-      readonly description: string;
-      readonly extras: ReadonlyArray<string>;
-      readonly projectName: string;
-      readonly runner: Runner;
-      readonly type: ProjectType;
-    };
+    const { definitions, description, extras, projectName, runner, type } =
+      answers as {
+        readonly definitions?: TypeDefinitions
+        readonly description: string
+        readonly extras: ReadonlyArray<string>
+        readonly projectName: string
+        readonly runner: Runner
+        readonly type: ProjectType
+      }
     return {
       appveyor: extras.includes(Extras.appveyor),
       circleci: extras.includes(Extras.circleci),
@@ -178,6 +172,6 @@ export async function inquire(): Promise<TypescriptStarterCLIOptions> {
       strict: extras.includes(Extras.strict),
       travis: extras.includes(Extras.travis),
       vscode: extras.includes(Extras.vscode),
-    };
-  });
+    }
+  })
 }

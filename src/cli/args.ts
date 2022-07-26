@@ -1,7 +1,7 @@
-import meow from 'meow';
-import { Package, UpdateNotifier } from 'update-notifier';
+import meow from 'meow'
+import { Package, UpdateNotifier } from 'update-notifier'
 
-import { Runner, TypescriptStarterArgsOptions, validateName } from './utils';
+import { Runner, TypescriptStarterArgsOptions, validateName } from './utils'
 
 export async function checkArgs(): Promise<TypescriptStarterArgsOptions> {
   const cli = meow(
@@ -88,22 +88,22 @@ export async function checkArgs(): Promise<TypescriptStarterArgsOptions> {
         },
       },
     }
-  );
+  )
 
   const info = await new UpdateNotifier({
     pkg: cli.pkg as Package,
-  }).fetchInfo();
+  }).fetchInfo()
   if (info.type !== 'latest') {
     // eslint-disable-next-line functional/no-throw-statement
     throw new Error(`
       Your version of typescript-starter is outdated.
       Consider using 'npx typescript-starter' to always get the latest version.
-      `);
+      `)
   }
 
-  const version = cli.pkg.version as string;
+  const version = cli.pkg.version as string
 
-  const input = cli.input[0];
+  const input = cli.input[0]
   if (!input) {
     /**
      * No project-name provided, return to collect options in interactive mode.
@@ -113,12 +113,12 @@ export async function checkArgs(): Promise<TypescriptStarterArgsOptions> {
     return {
       install: cli.flags.install,
       starterVersion: version,
-    };
+    }
   }
-  const validOrMsg = validateName(input);
+  const validOrMsg = validateName(input)
   if (typeof validOrMsg === 'string') {
     // eslint-disable-next-line functional/no-throw-statement
-    throw new Error(validOrMsg);
+    throw new Error(validOrMsg)
   }
 
   return {
@@ -137,5 +137,5 @@ export async function checkArgs(): Promise<TypescriptStarterArgsOptions> {
     strict: cli.flags.strict,
     travis: cli.flags.travis,
     vscode: cli.flags.vscode,
-  };
+  }
 }

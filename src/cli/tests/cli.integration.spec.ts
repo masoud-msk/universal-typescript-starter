@@ -13,19 +13,19 @@
  * `diff build/test-one/package.json build/test-two/package.json`
  */
 
-import { existsSync, mkdirSync } from 'fs';
-import { join, relative } from 'path';
+import { existsSync, mkdirSync } from 'fs'
+import { join, relative } from 'path'
 
-import test, { ExecutionContext } from 'ava';
-import del from 'del';
-import execa from 'execa';
-import globby from 'globby';
-import md5File from 'md5-file';
-import meow from 'meow';
+import test, { ExecutionContext } from 'ava'
+import del from 'del'
+import execa from 'execa'
+import globby from 'globby'
+import md5File from 'md5-file'
+import meow from 'meow'
 
-import { cloneRepo, Placeholders, Tasks } from '../tasks';
-import { typescriptStarter } from '../typescript-starter';
-import { normalizePath, Runner } from '../utils';
+import { cloneRepo, Placeholders, Tasks } from '../tasks'
+import { typescriptStarter } from '../typescript-starter'
+import { normalizePath, Runner } from '../utils'
 
 /**
  * NOTE: many of the tests below validate file modification. The filesystem is
@@ -40,21 +40,21 @@ const branch = execa.sync('git', [
   '--symbolic-full-name',
   '--abbrev-ref',
   'HEAD',
-]).stdout;
+]).stdout
 const repoInfo = {
   // if local repo is in a detached HEAD state, providing --branch to `git clone` will fail.
   branch: branch === 'HEAD' ? '.' : branch,
   repo: process.cwd(),
-};
-const testDir = join(process.cwd(), 'test');
-if (existsSync(testDir)) {
-  del.sync(testDir);
 }
-mkdirSync(testDir);
+const testDir = join(process.cwd(), 'test')
+if (existsSync(testDir)) {
+  del.sync(testDir)
+}
+mkdirSync(testDir)
 const env = {
   TYPESCRIPT_STARTER_REPO_BRANCH: repoInfo.branch,
   TYPESCRIPT_STARTER_REPO_URL: repoInfo.repo,
-};
+}
 
 enum TestDirectories {
   one = 'test-1',
@@ -66,64 +66,64 @@ enum TestDirectories {
 }
 
 test('returns version', async (t) => {
-  const expected = meow('').pkg.version;
-  t.truthy(typeof expected === 'string');
-  const { stdout } = await execa(`./bin/typescript-starter`, ['--version']);
-  t.is(stdout, expected);
-});
+  const expected = meow('').pkg.version
+  t.truthy(typeof expected === 'string')
+  const { stdout } = await execa(`./bin/typescript-starter`, ['--version'])
+  t.is(stdout, expected)
+})
 
 test('returns help/usage', async (t) => {
-  const { stdout } = await execa(`./bin/typescript-starter`, ['--help']);
-  t.regex(stdout, /Usage/);
-});
+  const { stdout } = await execa(`./bin/typescript-starter`, ['--help'])
+  t.regex(stdout, /Usage/)
+})
 
 test('errors if project name collides with an existing path', async (t) => {
-  const existingDir = 'build';
+  const existingDir = 'build'
   const error = await t.throwsAsync<execa.ExecaError>(
     execa(`./bin/typescript-starter`, [existingDir])
-  );
-  t.regex(error.stderr, /"build" path already exists/);
-});
+  )
+  t.regex(error.stderr, /"build" path already exists/)
+})
 
 test('errors if project name is not in kebab-case', async (t) => {
   const error = await t.throwsAsync<execa.ExecaError>(
     execa(`./bin/typescript-starter`, ['name with spaces'])
-  );
-  t.regex(error.stderr, /should be in-kebab-case/);
-});
+  )
+  t.regex(error.stderr, /should be in-kebab-case/)
+})
 
 async function hashAllTheThings(
   projectName: string,
   sandboxed = false
 ): Promise<{ readonly [filename: string]: string }> {
-  const projectDir = normalizePath(join(testDir, projectName));
+  const projectDir = normalizePath(join(testDir, projectName))
   const rawFilePaths: ReadonlyArray<string> = await globby(
     [projectDir, `!${projectDir}/.git`],
     {
       dot: true,
     }
-  );
+  )
   const filePaths = sandboxed
     ? rawFilePaths
     : rawFilePaths.filter(
         (path) =>
           // When not sandboxed, these files will change based on git config
           !['LICENSE', 'package.json'].includes(relative(projectDir, path))
-      );
-  const hashAll = filePaths.map<Promise<string>>((path) => md5File(path));
-  const hashes = await Promise.all(hashAll);
+      )
+  const hashAll = filePaths.map<Promise<string>>((path) => md5File(path))
+  const hashes = await Promise.all(hashAll)
   return hashes.reduce<{ readonly [filename: string]: string }>(
     (acc, hash, i) => {
       const trimmedNormalizedFilePath = normalizePath(
         relative(testDir, filePaths[i])
-      );
+      )
       return {
         ...acc,
         [trimmedNormalizedFilePath]: hash,
-      };
+      }
     },
     {}
-  );
+  )
 }
 
 /**
@@ -137,10 +137,10 @@ async function hashAllTheThings(
 const ignorePackageJson = (map: { readonly [file: string]: string }) =>
   Object.entries(map)
     .filter((entry) => !entry[0].includes('package.json'))
-    .reduce((ret, [path, hash]) => ({ ...ret, [path]: hash }), {});
+    .reduce((ret, [path, hash]) => ({ ...ret, [path]: hash }), {})
 
 test(`${TestDirectories.one}: parses CLI arguments, handles default options`, async (t) => {
-  const description = 'example description 1';
+  const description = 'example description 1'
   const { stdout } = await execa(
     `../bin/typescript-starter`,
     [
@@ -153,9 +153,9 @@ test(`${TestDirectories.one}: parses CLI arguments, handles default options`, as
       cwd: testDir,
       env,
     }
-  );
-  t.regex(stdout, new RegExp(`Created ${TestDirectories.one} 🎉`));
-  const map = await hashAllTheThings(TestDirectories.one);
+  )
+  t.regex(stdout, new RegExp(`Created ${TestDirectories.one} 🎉`))
+  const map = await hashAllTheThings(TestDirectories.one)
   t.deepEqual(map, {
     'test-1/.circleci/config.yml': '44d2fd424c93d381d41030f789efabba',
     'test-1/.cspell.json': '61bbd8ed98375a94cbd1063ab498959f',
@@ -177,11 +177,11 @@ test(`${TestDirectories.one}: parses CLI arguments, handles default options`, as
     'test-1/src/types/example.d.ts': '76642861732b16754b0110fb1de49823',
     'test-1/tsconfig.json': '4228782ef56faca96f8123a88bf26dc2',
     'test-1/tsconfig.module.json': '2fda4c8760c6cfa3462b40df0645850d',
-  });
-});
+  })
+})
 
 test(`${TestDirectories.two}: parses CLI arguments, handles all options`, async (t) => {
-  const description = 'example description 2';
+  const description = 'example description 2'
   const { stdout } = await execa(
     `../bin/typescript-starter`,
     [
@@ -198,9 +198,9 @@ test(`${TestDirectories.two}: parses CLI arguments, handles all options`, async 
       cwd: testDir,
       env,
     }
-  );
-  t.regex(stdout, new RegExp(`Created ${TestDirectories.two} 🎉`));
-  const map = await hashAllTheThings(TestDirectories.two);
+  )
+  t.regex(stdout, new RegExp(`Created ${TestDirectories.two} 🎉`))
+  const map = await hashAllTheThings(TestDirectories.two)
   t.deepEqual(map, {
     'test-2/.circleci/config.yml': '44d2fd424c93d381d41030f789efabba',
     'test-2/.cspell.json': '61bbd8ed98375a94cbd1063ab498959f',
@@ -226,51 +226,51 @@ test(`${TestDirectories.two}: parses CLI arguments, handles all options`, async 
     'test-2/src/types/example.d.ts': '76642861732b16754b0110fb1de49823',
     'test-2/tsconfig.json': '7a9481f033cb07985ee1b903ad42b167',
     'test-2/tsconfig.module.json': '2fda4c8760c6cfa3462b40df0645850d',
-  });
-});
+  })
+})
 
-const down = '\x1B\x5B\x42';
-const up = '\x1B\x5B\x41';
-const enter = '\x0D';
+const down = '\x1B\x5B\x42'
+const up = '\x1B\x5B\x41'
+const enter = '\x0D'
 const ms = (milliseconds: number) =>
-  new Promise<void>((resolve) => setTimeout(resolve, milliseconds));
+  new Promise<void>((resolve) => setTimeout(resolve, milliseconds))
 
 async function testInteractive(
   projectName: string,
   entry: ReadonlyArray<string | ReadonlyArray<string>>
 ): Promise<execa.ExecaReturnValue<string>> {
-  const typeDefs = entry[3] !== '';
+  const typeDefs = entry[3] !== ''
   const proc = execa(`../bin/typescript-starter`, ['--no-install'], {
     cwd: testDir,
     env,
-  });
+  })
 
   // TODO: missing in Node.js type definition's ChildProcess.stdin?
   // https://nodejs.org/api/process.html#process_process_stdin
   // proc.stdin.setEncoding('utf8');
 
-  const type = (input: string) => proc.stdin?.write(input);
+  const type = (input: string) => proc.stdin?.write(input)
 
   // wait for first chunk to be emitted
   await new Promise((resolve) => {
-    proc.stdout?.once('data', resolve);
-  });
-  await ms(200);
-  type(`${projectName}${enter}`);
-  await ms(200);
-  type(`${entry[0][0]}${enter}`);
-  await ms(200);
-  type(`${entry[1]}${enter}`);
-  await ms(200);
-  type(`${entry[2][0]}${enter}`);
-  await ms(200);
+    proc.stdout?.once('data', resolve)
+  })
+  await ms(200)
+  type(`${projectName}${enter}`)
+  await ms(200)
+  type(`${entry[0][0]}${enter}`)
+  await ms(200)
+  type(`${entry[1]}${enter}`)
+  await ms(200)
+  type(`${entry[2][0]}${enter}`)
+  await ms(200)
   if (typeDefs) {
-    type(`${entry[3][0]}${enter}`);
-    await ms(200);
+    type(`${entry[3][0]}${enter}`)
+    await ms(200)
   }
-  type(`${entry[4][0]}${enter}`);
-  await ms(200);
-  return proc;
+  type(`${entry[4][0]}${enter}`)
+  await ms(200)
+  return proc
 }
 
 test(`${TestDirectories.three}: interactive mode: javascript library`, async (t) => {
@@ -283,9 +283,9 @@ test(`${TestDirectories.three}: interactive mode: javascript library`, async (t)
       ' ',
       'stricter type-checking[\\s\\S]*eslint-plugin-functional[\\s\\S]*VS Code',
     ],
-  ]);
-  await proc;
-  const map = await hashAllTheThings(TestDirectories.three);
+  ])
+  await proc
+  const map = await hashAllTheThings(TestDirectories.three)
   t.deepEqual(map, {
     'test-3/.circleci/config.yml': '44d2fd424c93d381d41030f789efabba',
     'test-3/.cspell.json': '61bbd8ed98375a94cbd1063ab498959f',
@@ -311,8 +311,8 @@ test(`${TestDirectories.three}: interactive mode: javascript library`, async (t)
     'test-3/src/types/example.d.ts': '76642861732b16754b0110fb1de49823',
     'test-3/tsconfig.json': '472791a7b88cee5b9369207216fe7f98',
     'test-3/tsconfig.module.json': '2fda4c8760c6cfa3462b40df0645850d',
-  });
-});
+  })
+})
 
 test(`${TestDirectories.four}: interactive mode: node.js application`, async (t) => {
   const proc = await testInteractive(`${TestDirectories.four}`, [
@@ -321,9 +321,9 @@ test(`${TestDirectories.four}: interactive mode: node.js application`, async (t)
     [`${down}${up}${enter}`, `npm`],
     '',
     [`${down} `, 'VS Code'],
-  ]);
-  await proc;
-  const map = await hashAllTheThings(TestDirectories.four);
+  ])
+  await proc
+  const map = await hashAllTheThings(TestDirectories.four)
   t.deepEqual(map, {
     'test-4/.circleci/config.yml': '44d2fd424c93d381d41030f789efabba',
     'test-4/.cspell.json': '61bbd8ed98375a94cbd1063ab498959f',
@@ -347,8 +347,8 @@ test(`${TestDirectories.four}: interactive mode: node.js application`, async (t)
     'test-4/src/types/example.d.ts': '76642861732b16754b0110fb1de49823',
     'test-4/tsconfig.json': 'b4786d3cf1c3e6bd51253c036bfc6e8a',
     'test-4/tsconfig.module.json': '2fda4c8760c6cfa3462b40df0645850d',
-  });
-});
+  })
+})
 
 const sandboxTasks = (
   t: ExecutionContext<unknown>,
@@ -358,31 +358,31 @@ const sandboxTasks = (
   return {
     cloneRepo: cloneRepo(execa, true),
     initialCommit: async () => {
-      commit ? t.pass() : t.fail();
+      commit ? t.pass() : t.fail()
     },
     install: async () => {
-      install ? t.pass() : t.fail();
+      install ? t.pass() : t.fail()
     },
-  };
-};
+  }
+}
 
 const sandboxOptions = {
   description: 'this is an example description',
   githubUsername: 'SOME_GITHUB_USERNAME',
   repoInfo,
   workingDirectory: testDir,
-};
+}
 
 const silenceConsole = (console: Console) => {
   // eslint-disable-next-line functional/immutable-data
   console.log = () => {
     // mock console.log to silence it
-    return;
-  };
-};
+    return
+  }
+}
 
 test(`${TestDirectories.five}: Sandboxed: npm install, initial commit`, async (t) => {
-  t.plan(3);
+  t.plan(3)
   const options = {
     ...sandboxOptions,
     appveyor: false,
@@ -401,10 +401,10 @@ test(`${TestDirectories.five}: Sandboxed: npm install, initial commit`, async (t
     strict: true,
     travis: false,
     vscode: false,
-  };
-  silenceConsole(console);
-  await typescriptStarter(options, sandboxTasks(t, true, true));
-  const map = await hashAllTheThings(TestDirectories.five, true);
+  }
+  silenceConsole(console)
+  await typescriptStarter(options, sandboxTasks(t, true, true))
+  const map = await hashAllTheThings(TestDirectories.five, true)
   t.deepEqual(ignorePackageJson(map), {
     'test-5/.eslintrc.json': '4e74756d24eaccb7f28d4999e4bd6f0d',
     'test-5/.github/CONTRIBUTING.md': '5f0dfa7fdf9bf828e3a3aa8fcaeece08',
@@ -421,11 +421,11 @@ test(`${TestDirectories.five}: Sandboxed: npm install, initial commit`, async (t
     'test-5/src/types/example.d.ts': '76642861732b16754b0110fb1de49823',
     'test-5/tsconfig.json': '5ea2a8356e00e9407dd4641007fd3940',
     'test-5/tsconfig.module.json': '2fda4c8760c6cfa3462b40df0645850d',
-  });
-});
+  })
+})
 
 test(`${TestDirectories.six}: Sandboxed: yarn, no initial commit`, async (t) => {
-  t.plan(2);
+  t.plan(2)
   const options = {
     ...sandboxOptions,
     appveyor: true,
@@ -443,10 +443,10 @@ test(`${TestDirectories.six}: Sandboxed: yarn, no initial commit`, async (t) => 
     strict: false,
     travis: true,
     vscode: true,
-  };
-  silenceConsole(console);
-  await typescriptStarter(options, sandboxTasks(t, false, true));
-  const map = await hashAllTheThings(TestDirectories.six, true);
+  }
+  silenceConsole(console)
+  await typescriptStarter(options, sandboxTasks(t, false, true))
+  const map = await hashAllTheThings(TestDirectories.six, true)
   t.deepEqual(ignorePackageJson(map), {
     'test-6/.circleci/config.yml': '44d2fd424c93d381d41030f789efabba',
     'test-6/.editorconfig': '44a3e6c69d9267b0f756986fd970a8f4',
@@ -474,5 +474,5 @@ test(`${TestDirectories.six}: Sandboxed: yarn, no initial commit`, async (t) => 
     'test-6/src/types/example.d.ts': '76642861732b16754b0110fb1de49823',
     'test-6/tsconfig.json': '7a9481f033cb07985ee1b903ad42b167',
     'test-6/tsconfig.module.json': '2fda4c8760c6cfa3462b40df0645850d',
-  });
-});
+  })
+})
